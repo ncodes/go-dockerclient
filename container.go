@@ -16,7 +16,7 @@ import (
 	"strings"
 	"time"
 
-	units "github.com/fsouza/go-dockerclient/external/github.com/docker/go-units"
+	units "github.com/docker/go-units"
 
 	"golang.org/x/net/context"
 )
