@@ -11,11 +11,13 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/docker/go-units"
+	units "github.com/fsouza/go-dockerclient/external/github.com/docker/go-units"
+
 	"golang.org/x/net/context"
 )
 
@@ -47,11 +49,10 @@ type APIPort struct {
 // APIMount represents a mount point for a container.
 type APIMount struct {
 	Name        string `json:"Name,omitempty" yaml:"Name,omitempty" toml:"Name,omitempty"`
+	Type        string `json:"Type,omitempty" yaml:"Type,omitempty" toml:"Type,omitempty"`
 	Source      string `json:"Source,omitempty" yaml:"Source,omitempty" toml:"Source,omitempty"`
-	Destination string `json:"Destination,omitempty" yaml:"Destination,omitempty" toml:"Destination,omitempty"`
-	Driver      string `json:"Driver,omitempty" yaml:"Driver,omitempty" toml:"Driver,omitempty"`
-	Mode        string `json:"Mode,omitempty" yaml:"Mode,omitempty" toml:"Mode,omitempty"`
-	RW          bool   `json:"RW,omitempty" yaml:"RW,omitempty" toml:"RW,omitempty"`
+	Target      string `json:"Target,omitempty" yaml:"Target,omitempty" toml:"Target,omitempty"`
+	ReadOnly    bool   `json:"ReadOnly,omitempty" yaml:"ReadOnly,omitempty" toml:"ReadOnly,omitempty"`
 	Propogation string `json:"Propogation,omitempty" yaml:"Propogation,omitempty" toml:"Propogation,omitempty"`
 }
 
@@ -327,17 +328,47 @@ type Config struct {
 	VolumesFrom string `json:"VolumesFrom,omitempty" yaml:"VolumesFrom,omitempty" toml:"VolumesFrom,omitempty"`
 }
 
+// BindOptions defines options specific to mounts of type "bind".
+type BindOptions struct {
+
+	// Propagation represents the propagation of a mount
+	// https://github.com/docker/docker/blob/master/api/types/mount/mount.go#L35
+	Propagation string
+}
+
+// Driver represents a volume driver.
+type Driver struct {
+	Name    string            `json:",omitempty"`
+	Options map[string]string `json:",omitempty"`
+}
+
+// VolumeOptions represents the options for a mount of type volume.
+type VolumeOptions struct {
+	NoCopy       bool              `json:",omitempty"`
+	Labels       map[string]string `json:",omitempty"`
+	DriverConfig *Driver           `json:",omitempty"`
+}
+
+// TmpfsOptions defines options specific to mounts of type "tmpfs".
+// https://github.com/docker/docker/blob/master/api/types/mount/mount.go#L81
+type TmpfsOptions struct {
+	SizeBytes int64 `json:",omitempty"`
+	// Mode of the tmpfs upon creation
+	Mode os.FileMode `json:",omitempty"`
+}
+
 // Mount represents a mount point in the container.
 //
-// It has been added in the version 1.20 of the Docker API, available since
-// Docker 1.8.
+// It has been added in the version 1.26 of the Docker API, available since
+// Docker 1.13.1.
 type Mount struct {
-	Name        string
-	Source      string
-	Destination string
-	Driver      string
-	Mode        string
-	RW          bool
+	Type          string        `json:"Type,omitempty" yaml:"Type,omitempty" toml:"Type,omitempty"`
+	Source        string        `json:"Source,omitempty" yaml:"Source,omitempty" toml:"Source,omitempty"`
+	Target        string        `json:"Target,omitempty" yaml:"Target,omitempty" toml:"Target,omitempty"`
+	ReadOnly      bool          `json:"ReadOnly,omitempty" yaml:"ReadOnly,omitempty" toml:"ReadOnly,omitempty"`
+	BindOptions   BindOptions   `json:"BindOptions,omitempty" yaml:"BindOptions,omitempty" toml:"BindOptions,omitempty"`
+	VolumeOptions bool          `json:"VolumeOptions,omitempty" yaml:"VolumeOptions,omitempty" toml:"VolumeOptions,omitempty"`
+	TmpfsOptions  *TmpfsOptions `json:"TmpfsOptions,omitempty" yaml:"TmpfsOptions,omitempty" toml:"TmpfsOptions,omitempty"`
 }
 
 // LogConfig defines the log driver type and the configuration for it.
